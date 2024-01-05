@@ -14,6 +14,7 @@ struct LoopView: View {
     @Binding var isLooping: Bool
     @Binding var lastLoopDate: Date
     @Binding var manualTempBasal: Bool
+    @Binding var loopStatusStyle: LoopStatusStyle
 
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -21,29 +22,67 @@ struct LoopView: View {
         return formatter
     }
 
-    private let rect = CGRect(x: 0, y: 0, width: 28, height: 28)
+    private let rect = CGRect(x: 0, y: 0, width: 18, height: 18)
+
+    @ViewBuilder private func loopStatusBar(_ text: String) -> some View {
+        HStack(alignment: .center, spacing: 0) {
+            Rectangle()
+                .fill(color)
+                .frame(height: 3)
+
+            if isLooping {
+                ProgressView().foregroundColor(Color.loopGreen)
+            } else {
+                Text(text)
+                    .padding(4)
+                    .font(.callout)
+                    .fontWeight(.bold)
+                    .foregroundColor(color)
+            }
+
+            Rectangle()
+                .fill(color)
+                .frame(height: 3)
+        }
+    }
 
     var body: some View {
-        VStack(alignment: .center) {
-            ZStack {
-                Circle()
-                    .strokeBorder(color, lineWidth: 5)
-                    .frame(width: rect.width, height: rect.height, alignment: .bottom)
-                    .mask(mask(in: rect).fill(style: FillStyle(eoFill: true)))
+        if loopStatusStyle == .bar {
+            if isLooping {
+                loopStatusBar("")
+            } else if manualTempBasal {
+                loopStatusBar("Manual")
+            } else if actualSuggestion?.timestamp != nil {
+                loopStatusBar(timeString)
+            } else if closedLoop {
+                loopStatusBar("--")
+            } else {
+                loopStatusBar("--")
+            }
+
+        } else {
+            HStack(alignment: .center) {
                 if isLooping {
-                    ProgressView()
+                    Text("looping")
+                } else if manualTempBasal {
+                    Text("Manual")
+                } else if actualSuggestion?.timestamp != nil {
+                    Text(timeString)
+                } else {
+                    Text("--")
+                }
+                ZStack {
+                    Image(systemName: "circle")
+                        .fontWeight(.black)
+                        .mask(mask(in: rect).fill(style: FillStyle(eoFill: true)))
+                    if isLooping {
+                        ProgressView()
+                    }
                 }
             }
-            if isLooping {
-                Text("looping").font(.caption2)
-            } else if manualTempBasal {
-                Text("Manual").font(.caption2)
-            } else if actualSuggestion?.timestamp != nil {
-                Text(timeString).font(.caption2)
-                    .foregroundColor(.secondary)
-            } else {
-                Text("--").font(.caption2).foregroundColor(.secondary)
-            }
+            .strikethrough(!closedLoop || manualTempBasal, pattern: .solid, color: color)
+            .font(.system(size: 12, weight: .bold))
+            .foregroundColor(color)
         }
     }
 
@@ -57,11 +96,15 @@ struct LoopView: View {
 
     private var color: Color {
         guard actualSuggestion?.timestamp != nil else {
-            return .loopGray
+            return .secondary
         }
         guard manualTempBasal == false else {
             return .loopManualTemp
         }
+        guard closedLoop == true else {
+            return .secondary
+        }
+
         let delta = timerDate.timeIntervalSince(lastLoopDate) - Config.lag
 
         if delta <= 5.minutes.timeInterval {
@@ -79,7 +122,7 @@ struct LoopView: View {
     func mask(in rect: CGRect) -> Path {
         var path = Rectangle().path(in: rect)
         if !closedLoop || manualTempBasal {
-            path.addPath(Rectangle().path(in: CGRect(x: rect.minX, y: rect.midY - 5, width: rect.width, height: 10)))
+            path.addPath(Rectangle().path(in: CGRect(x: rect.minX, y: rect.midY - 4, width: rect.width, height: 5)))
         }
         return path
     }

@@ -169,7 +169,15 @@ final class BaseHealthKitManager: HealthKitManager, Injectable, CarbsObserver, P
                     )
                 }
 
-            healthKitStore.save(samplesToSave) { _, _ in }
+            healthKitStore.save(samplesToSave) { (success: Bool, error: Error?) -> Void in
+                if success {
+                    debug(.service, "Saved blood glucose")
+                } else {
+                    debug(.service, "Failed saving blood glucose")
+                    debug(.service, error!.localizedDescription)
+                }
+            }
+//            { _, _ in }
         }
 
         loadSamplesFromHealth(sampleType: sampleType, withIDs: bloodGlucose.map(\.id))
@@ -210,7 +218,15 @@ final class BaseHealthKitManager: HealthKitManager, Injectable, CarbsObserver, P
                     )
                 }
 
-            healthKitStore.save(samplesToSave) { _, _ in }
+            healthKitStore.save(samplesToSave) { (success: Bool, error: Error?) -> Void in
+                if success {
+                    debug(.service, "Saved carb entry")
+                } else {
+                    debug(.service, "Failed saving carb entry")
+                    debug(.service, error!.localizedDescription)
+                }
+            }
+//            { _, _ in }
         }
 
         loadSamplesFromHealth(sampleType: sampleType)
@@ -275,7 +291,15 @@ final class BaseHealthKitManager: HealthKitManager, Injectable, CarbsObserver, P
                     )
                 }
 
-            healthKitStore.save(bolusSamples + basalSamples) { _, _ in }
+            healthKitStore.save(bolusSamples + basalSamples) { (success: Bool, error: Error?) -> Void in
+                if success {
+                    debug(.service, "Saved insulin delivery")
+                } else {
+                    debug(.service, "Failed saving insulin delivery")
+                    debug(.service, error!.localizedDescription)
+                }
+            }
+//            { _, _ in }
         }
 
         loadSamplesFromHealth(sampleType: sampleType, withIDs: events.map(\.id))

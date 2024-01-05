@@ -31,6 +31,15 @@ extension StatConfig {
                     Toggle("Display Chart Y - Grid lines", isOn: $state.yGridLines)
                     Toggle("Display Chart Threshold lines for Low and High", isOn: $state.rulerMarks)
                     Toggle("Standing / Laying TIR Chart", isOn: $state.oneDimensionalGraph)
+                    Toggle("Enable total insulin in scope", isOn: $state.tins)
+                    Picker(
+                        selection: $state.loopStatusStyle,
+                        label: Text("Loop Status Style")
+                    ) {
+                        ForEach(LoopStatusStyle.allCases) { selection in
+                            Text(selection.displayName).tag(selection)
+                        }
+                    }
                 } header: { Text("Home Chart settings ") }
 
                 Section {
@@ -54,6 +63,17 @@ extension StatConfig {
                     Toggle("Skip Bolus screen after carbs", isOn: $state.skipBolusScreenAfterCarbs)
                     Toggle("Display and allow Fat and Protein entries", isOn: $state.useFPUconversion)
                 } header: { Text("Add Meal View settings ") }
+
+                Section {
+                    Picker(
+                        selection: $state.historyLayout,
+                        label: Text("History Layout")
+                    ) {
+                        ForEach(HistoryLayout.allCases) { selection in
+                            Text(selection.displayName).tag(selection)
+                        }
+                    }
+                } header: { Text("History Settings") }
             }
             .onAppear(perform: configureView)
             .navigationBarTitle("UI/UX")

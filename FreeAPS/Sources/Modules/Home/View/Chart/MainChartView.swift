@@ -272,7 +272,7 @@ struct MainChartView: View {
         .scaleEffect(x: 1, y: -1)
         .frame(width: glucoseAndAdditionalWidth(fullSize: fullSize))
         .frame(maxHeight: Config.basalHeight)
-        .background(Color.secondary.opacity(0.1))
+        .background(Color.clear)
         .onChange(of: tempBasals) { _ in
             calculateBasalPoints(fullSize: fullSize)
         }
@@ -345,6 +345,9 @@ struct MainChartView: View {
         return ZStack {
             Path { path in
                 for hour in 0 ..< hours + hours {
+                    if screenHours >= 12 && hour % 2 == 1 {
+                        continue
+                    }
                     let x = (
                         firstHourPosition(viewWidth: fullSize.width) +
                             oneSecondStep(viewWidth: fullSize.width) *
@@ -373,17 +376,33 @@ struct MainChartView: View {
         return ZStack {
             // X time labels
             ForEach(0 ..< hours + hours, id: \.self) { hour in
-                Text(format.string(from: firstHourDate().addingTimeInterval(hour.hours.timeInterval)))
-                    .font(.caption)
-                    .position(
-                        x: (
-                            firstHourPosition(viewWidth: fullSize.width) +
-                                oneSecondStep(viewWidth: fullSize.width) *
-                                CGFloat(hour) * CGFloat(1.hours.timeInterval)
-                        ) * zoomScale,
-                        y: 10.0
-                    )
-                    .foregroundColor(.secondary)
+                // show every other label
+                if screenHours >= 12 && hour % 2 == 0 {
+                    Text(format.string(from: firstHourDate().addingTimeInterval(hour.hours.timeInterval)))
+                        .font(.caption)
+                        .position(
+                            x: (
+                                firstHourPosition(viewWidth: fullSize.width) +
+                                    oneSecondStep(viewWidth: fullSize.width) *
+                                    CGFloat(hour) * CGFloat(1.hours.timeInterval)
+                            ) * zoomScale,
+                            y: 10.0
+                        )
+                        .foregroundColor(.secondary)
+                } else if screenHours < 12 {
+                    // show every label
+                    Text(format.string(from: firstHourDate().addingTimeInterval(hour.hours.timeInterval)))
+                        .font(.caption)
+                        .position(
+                            x: (
+                                firstHourPosition(viewWidth: fullSize.width) +
+                                    oneSecondStep(viewWidth: fullSize.width) *
+                                    CGFloat(hour) * CGFloat(1.hours.timeInterval)
+                            ) * zoomScale,
+                            y: 10.0
+                        )
+                        .foregroundColor(.secondary)
+                }
             }
         }.frame(maxHeight: 20)
     }

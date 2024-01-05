@@ -25,6 +25,7 @@
   "carbsRequiredThreshold" : 10,
   "animatedBackground" : false,
   "useFPUconversion" : true,
+  "tins": false,
   "individualAdjustmentFactor" : 0.5,
   "timeCap" : 8,
   "minuteInterval" : 30,
@@ -47,4 +48,6 @@
   "useCalc": false,
   "fattyMeals": false,
   "fattyMealFactor": 0.7
+  "historyLayout": "twoTabs"
+  "loopStatusStyle": "circle"
 }
