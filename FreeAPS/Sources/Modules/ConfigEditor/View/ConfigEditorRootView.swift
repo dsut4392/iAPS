@@ -8,6 +8,24 @@ extension ConfigEditor {
         @StateObject var state = StateModel()
         @State private var showShareSheet = false
 
+        @Environment(\.colorScheme) var colorScheme
+        var color: LinearGradient {
+            colorScheme == .dark ? LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.bgDarkBlue,
+                    Color.bgDarkerDarkBlue
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+                :
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.gray.opacity(0.1)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+        }
+
         var body: some View {
             ZStack {
                 TextEditor(text: $state.configText)
@@ -40,6 +58,7 @@ extension ConfigEditor {
                     .navigationBarTitleDisplayMode(.inline)
                     .padding()
             }
+            .scrollContentBackground(.hidden).background(color)
         }
     }
 }

@@ -35,6 +35,23 @@ extension Bolus {
             } else { return 0 }
         }
 
+        private var color: LinearGradient {
+            colorScheme == .dark ? LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.bgDarkBlue,
+                    Color.bgDarkerDarkBlue
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+                :
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.gray.opacity(0.1)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+        }
+
         var body: some View {
             Form {
                 Section {
@@ -134,7 +151,9 @@ extension Bolus {
                     ),
                     secondaryButton: .cancel()
                 )
-            }.onAppear {
+            }
+            .scrollContentBackground(.hidden).background(color)
+            .onAppear {
                 configureView {
                     state.waitForSuggestionInitial = waitForSuggestion
                     state.waitForSuggestion = waitForSuggestion
@@ -151,19 +170,25 @@ extension Bolus {
 
             .navigationTitle("Enact Bolus")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button {
-                    carbsView()
-                }
-                label: {
-                    HStack {
-                        Image(systemName: "chevron.backward")
-                        Text("Meal")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if !fetch {
+                        Button("Close") {
+                            state.hideModal()
+                        }
+                    } else {
+                        Button {
+                            keepForNextWiew = true
+                            state.backToCarbsView(complexEntry: true, meal, override: false)
+                        } label: {
+                            HStack {
+                                Image(systemName: "chevron.backward")
+                                Text("Meal")
+                            }
+                        }
                     }
-                },
-                trailing: Button { state.hideModal() }
-                label: { Text("Close") }
-            )
+                }
+            }
             .popup(isPresented: presentInfo, alignment: .center, direction: .bottom) {
                 bolusInfo
             }
@@ -188,15 +213,6 @@ extension Bolus {
 
         var hasFatOrProtein: Bool {
             ((meal.first?.fat ?? 0) > 0) || ((meal.first?.protein ?? 0) > 0)
-        }
-
-        func carbsView() {
-            if fetch {
-                keepForNextWiew = true
-                state.backToCarbsView(complexEntry: fetch, meal, override: false)
-            } else {
-                state.backToCarbsView(complexEntry: false, meal, override: true)
-            }
         }
 
         var mealEntries: some View {

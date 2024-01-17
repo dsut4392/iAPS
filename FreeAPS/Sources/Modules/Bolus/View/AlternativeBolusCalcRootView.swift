@@ -55,6 +55,23 @@ extension Bolus {
             } else { return 0 }
         }
 
+        private var color: LinearGradient {
+            colorScheme == .dark ? LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.bgDarkBlue,
+                    Color.bgDarkerDarkBlue
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+                :
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.gray.opacity(0.1)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+        }
+
         var body: some View {
             Form {
                 Section {
@@ -166,19 +183,26 @@ extension Bolus {
             .blur(radius: showInfo ? 3 : 0)
             .navigationTitle("Enact Bolus")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button {
-                    carbsView()
-                }
-                label: {
-                    HStack {
-                        Image(systemName: "chevron.backward")
-                        Text("Meal")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if !fetch {
+                        Button("Close") {
+                            state.hideModal()
+                        }
+                    } else {
+                        Button {
+                            keepForNextWiew = true
+                            state.backToCarbsView(complexEntry: true, meal, override: false)
+                        } label: {
+                            HStack {
+                                Image(systemName: "chevron.backward")
+                                Text("Meal")
+                            }
+                        }
                     }
-                },
-                trailing: Button { state.hideModal() }
-                label: { Text("Close") }
-            )
+                }
+            }
+            .scrollContentBackground(.hidden).background(color)
             .onAppear {
                 configureView {
                     state.waitForSuggestionInitial = waitForSuggestion
@@ -326,10 +350,9 @@ extension Bolus {
 
                 Text("Subtract IOB").foregroundColor(.secondary.opacity(colorScheme == .dark ? 0.65 : 0.8)).font(.footnote)
 
+                let iobFormatted = self.insulinRounder(state.iob).formatted()
                 HStack {
-                    Text(
-                        "-" + self.insulinRounder(state.iob).formatted()
-                    )
+                    Text((state.iob != 0 ? "-" : "") + (state.iob >= 0 ? iobFormatted : "(" + iobFormatted + ")"))
                     Text("U").foregroundColor(.secondary)
                 }.fontWeight(.bold)
                     .gridColumnAlignment(.trailing)
@@ -447,31 +470,31 @@ extension Bolus {
                 Text("Result").fontWeight(.bold)
 
                 HStack {
-                    let fraction = state.fraction
-                    Text(fraction.formatted())
-                    Text("x")
+                    Text(state.fraction.formatted())
+
+                        + Text(" x ")
                         .foregroundColor(.secondary)
 
-                    // if fatty meal is chosen
-                    if state.useFattyMealCorrectionFactor {
-                        let fattyMealFactor = state.fattyMealFactor
-                        Text(fattyMealFactor.formatted())
-                            .foregroundColor(.orange)
-                        Text("x")
-                            .foregroundColor(.secondary)
-                    }
+                        // if fatty meal is chosen
+                        + Text(state.useFattyMealCorrectionFactor ? state.fattyMealFactor.formatted() : "")
+                        .foregroundColor(.orange)
 
-                    Text(self.insulinRounder(state.wholeCalc).formatted())
-                        .foregroundStyle(state.wholeCalc < 0 ? Color.loopRed : Color.primary)
+                        + Text(state.useFattyMealCorrectionFactor ? " x " : "")
+                        .foregroundColor(.secondary)
+                        // endif fatty meal is chosen
 
-                    Text("≈").foregroundColor(.secondary)
+                        + Text(self.insulinRounder(state.wholeCalc).formatted())
+                        .foregroundColor(state.wholeCalc < 0 ? Color.loopRed : Color.primary)
+
+                        + Text(" ≈ ")
+                        .foregroundColor(.secondary)
                 }
                 .gridColumnAlignment(.leading)
 
                 HStack {
                     Text(self.insulinRounder(state.insulinCalculated).formatted())
                         .fontWeight(.bold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(state.wholeCalc > state.maxBolus ? Color.loopRed : Color.blue)
                     Text("U").foregroundColor(.secondary)
                 }
                 .gridColumnAlignment(.trailing)
@@ -481,21 +504,15 @@ extension Bolus {
 
         var calcResultFormulaRow: some View {
             GridRow(alignment: .bottom) {
-                if state.useFattyMealCorrectionFactor {
-                    Text("Factor x Fatty Meal Factor x Full Bolus")
-                        .foregroundColor(.secondary.opacity(colorScheme == .dark ? 0.65 : 0.8))
-                        .font(.caption)
-                        .gridCellAnchor(.center)
-                        .gridCellColumns(3)
-                } else {
-                    Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
-                    Text("Factor x Full Bolus")
-                        .foregroundColor(.secondary.opacity(colorScheme == .dark ? 0.65 : 0.8))
-                        .font(.caption)
-                        .padding(.top, 5)
-                        .gridCellAnchor(.leading)
-                        .gridCellColumns(2)
+                Group {
+                    Text(state.useFattyMealCorrectionFactor ? "Factor x Fatty Meal Factor x Full Bolus" : "Factor x Full Bolus")
+                        .foregroundColor(.secondary.opacity(colorScheme == .dark ? 0.65 : 0.8)) +
+                        Text(state.wholeCalc > state.maxBolus ? " ≈ Max Bolus" : "").foregroundColor(Color.loopRed)
                 }
+                .font(.caption)
+                .padding(.top, 5)
+                .gridCellAnchor(.center)
+                .gridCellColumns(3)
             }
         }
 
@@ -617,15 +634,6 @@ extension Bolus {
 
         var hasFatOrProtein: Bool {
             ((meal.first?.fat ?? 0) > 0) || ((meal.first?.protein ?? 0) > 0)
-        }
-
-        func carbsView() {
-            if fetch {
-                keepForNextWiew = true
-                state.backToCarbsView(complexEntry: true, meal, override: false)
-            } else {
-                state.backToCarbsView(complexEntry: false, meal, override: true)
-            }
         }
 
         var mealEntries: some View {

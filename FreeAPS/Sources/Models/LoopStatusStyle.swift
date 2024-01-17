@@ -4,7 +4,6 @@ enum LoopStatusStyle: String, JSON, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
     case circle
     case bar
-    
 
     var displayName: String {
         switch self {

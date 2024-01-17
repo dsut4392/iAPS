@@ -665,7 +665,7 @@ extension Home {
 
             let bolusTotal = state.boluses.last?.amount ?? 0
             let bolusFraction = progress * bolusTotal
-            
+
             let bolusString =
                 (
                     bolusProgressFormatter
@@ -710,23 +710,16 @@ extension Home {
         var body: some View {
             let colorBackground = colorScheme == .dark ? LinearGradient(
                 gradient: Gradient(colors: [
-                    // RGB(10, 34, 55)
-                    Color(red: 0.03921568627, green: 0.1333333333, blue: 0.2156862745),
-                    // RGB(3, 15, 28)
-                    Color(red: 0.011, green: 0.058, blue: 0.109),
-                    // RGB(10, 34, 55)
-                    Color(red: 0.03921568627, green: 0.1333333333, blue: 0.2156862745)
+                    Color.bgDarkBlue,
+                    Color.bgDarkerDarkBlue,
+                    Color.bgDarkBlue
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
             )
                 :
                 LinearGradient(gradient: Gradient(colors: [Color.gray.opacity(0.1)]), startPoint: .top, endPoint: .bottom)
-            let colourChart: Color = colorScheme == .dark ? Color(
-                red: 0.05490196078,
-                green: 0.05490196078,
-                blue: 0.05490196078
-            ) : .white
+            let colourChart: Color = colorScheme == .dark ? Color.chart : .white
 
             GeometryReader { geo in
                 VStack(spacing: 0) {
